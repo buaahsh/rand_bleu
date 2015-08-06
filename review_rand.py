@@ -44,10 +44,13 @@ def get_cases(cx, pro_id=None, user_id=None, rating=None, num=None):
     return result
 
 if __name__ == "__main__":
-    test = "the the the the the the the"
+    for f in Path(input_folder).files('*.txt'):
+        build_db(f.abspath())
 
-    file_name = "train"
-    build_db(file_name)
-    cx = load_model(file_name + '.db')
-    refs = get_cases(cx, user_id=1)
-    print(bleu.score_all([test], [refs], 3))
+    # test = "the the the the the the the"
+    #
+    # file_name = "train"
+    # build_db(file_name)
+    # cx = load_model(file_name + '.db')
+    # refs = get_cases(cx, user_id=1)
+    # print(bleu.score_all([test], [refs], 3))

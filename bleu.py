@@ -21,9 +21,10 @@ from __future__ import division
 import math
 import re
 import xml.sax.saxutils
+import time
 
 # Added to bypass NIST-style pre-processing of hyp and ref files -- wade
-nonorm = 0
+nonorm = False
 
 preserve_case = False
 eff_ref_len = "shortest"
@@ -125,9 +126,6 @@ def cook_test(test, args, n=4):
     return result
 
 def score_cooked(all_comps, n=4, is_smooth=True):
-    """
-
-    """
     total_comps = {'testlen':0, 'reflen':0, 'guess':[0]*n, 'correct':[0]*n}
     for comps in all_comps:
         for key in ['testlen','reflen']:
@@ -138,11 +136,14 @@ def score_cooked(all_comps, n=4, is_smooth=True):
     logbleu = 0.0
     invcnt = 1
     for k in range(n):
-        if total_comps['correct'][k] == 0:
-            if not is_smooth:
-                return 0.0
-            invcnt *= 2
-            total_comps['correct'][k] = 1.0 / invcnt
+        if k !=0 :
+            total_comps['correct'][k] += 1
+            total_comps['guess'][k] += 1
+        # if total_comps['correct'][k] == 0:
+        #     if not is_smooth:
+        #         return 0.0
+        #     invcnt *= 2
+        #     total_comps['correct'][k] = 1.0 / invcnt
         logbleu += math.log(total_comps['correct'][k])-math.log(total_comps['guess'][k])
     logbleu /= float(n)
     logbleu += min(0,1-float(total_comps['reflen'])/total_comps['testlen'])
@@ -150,16 +151,32 @@ def score_cooked(all_comps, n=4, is_smooth=True):
 
 def score_all(test, refs, n=2, is_smooth=True):
     cooked_test = []
+    index = -1
     for t, r in zip(test, refs):
+        index += 1
+        if index % 10000 == 0:
+            print index, time.strftime('%Y-%m-%d %X', time.localtime())
         ct = cook_test(t, cook_refs(r, n), n)
         cooked_test.append(ct)
     score = score_cooked(cooked_test, n)
     return score
 
 if __name__ == "__main__":
-    refs = ["the cat is on the mat", "there is a cat on the mat"]
-    test = "the the the the the the the"
-    n = 2
-    # cooked_test = cook_test(test, cook_refs(refs, n), n)
-    # print(score_cooked([cooked_test], n))
-    print(score_all([test],[refs], 1))
+    file_name = "same_user_rand.txt"
+    file_name = "same_pro_rand.txt"
+    file_name = "save_epoch16.17_2.4484.t7.sample"
+    with open(file_name, 'r') as f_in:
+        r = 0
+        test = []
+        refs = []
+        
+        for l in f_in:
+            
+            if r == 0:
+                test.append(l.strip())
+                r = 1
+            else:
+                refs.append([l.strip()])
+                r = 0
+    n = 4
+    print(score_all(test,refs, n))

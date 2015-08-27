@@ -44,7 +44,7 @@ def do(l_list,f_out_1, reviews):
         print >>f_out_1, r.strip()
 
 if __name__ == "__main__":
-    file_name = '../data/train.txt'
+    file_name = '../data/train_dump.txt'
     reviews = build_matrix(file_name)
     test_file = "../data/test.txt"
     output_file = "../data/all_rand.txt"

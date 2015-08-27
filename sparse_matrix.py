@@ -19,6 +19,7 @@ import random
 
 LINE_PER_CORE = 1000
 NUM_CORE = multiprocessing.cpu_count()-1
+# NUM_CORE = 1
 
 def save_sparse_csr(file_name,array):
     np.savez(file_name,data = array.data ,col=array.col,
@@ -31,6 +32,7 @@ def load_sparse_csr(file_name):
 
 
 def build_matrix(file_name):
+    print "Building matrix..."
     _dict = {}
     pro_id = []
     user_id = []
@@ -47,6 +49,7 @@ def build_matrix(file_name):
     user_id = np.array(user_id)
     rating = np.array(rating)
     _matrix = coo_matrix((rating, (pro_id, user_id)), shape=(np.max(pro_id) + 1, np.max(user_id) + 1))
+    print "Finished building"
     return _matrix, _dict
 
 
@@ -60,6 +63,7 @@ def random_one(_matrix, pro_id, user_id, rating, is_same_rating=True):
                     if j == rating + b or j == rating - b:
                         index.append(i)
                 if index:
+                    # print "index", index
                     return random.choice(index)
                 b += 1
         else:
@@ -89,6 +93,8 @@ def process_one((_in, _matrix)):
 def do(l_list,f_out_1, f_out_2, _matrix, _dict):
     pool = Pool(NUM_CORE)
     r_list=pool.map(process_one,zip([l_list[it:it+LINE_PER_CORE] for it in xrange(0,len(l_list),LINE_PER_CORE)], repeat(_matrix)))
+    # print len(l_list)
+    # r_list = process_one((l_list, _matrix))
     pool.close()
     pool.join()
 
@@ -101,17 +107,18 @@ def do(l_list,f_out_1, f_out_2, _matrix, _dict):
             print >>f_out_2, _dict[str(u[0]+1) + "_" + str(u[1]+1)]
 
 if __name__ == "__main__":
-    file_name = 'train.txt'
+    file_name = '../data/train_dump.txt'
     _matrix, _dict = build_matrix(file_name)
-    test_file = "test.txt"
-    with open('same_pro_rand.txt','w') as f_out_1:
-        with open('same_user_rand.txt', 'w') as f_out_2:
+    test_file = "../data/test.txt"
+    with open('../data/same_pro_rand.txt','w') as f_out_1:
+        with open('../data/same_user_rand.txt', 'w') as f_out_2:
             l_list=[]
             g = open(test_file, 'r')
             for l in g:
                 if len(l_list)<NUM_CORE*LINE_PER_CORE:
                     l_list.append(l)
                 else:
+                    print "starting", time.strftime('%Y-%m-%d %X', time.localtime())
                     do(l_list, f_out_1, f_out_2, _matrix, _dict)
                     l_list=[]
                     print time.strftime('%Y-%m-%d %X', time.localtime())

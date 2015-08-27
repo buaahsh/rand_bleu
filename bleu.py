@@ -162,9 +162,9 @@ def score_all(test, refs, n=2, is_smooth=True):
     return score
 
 if __name__ == "__main__":
-    file_name = "same_user_rand.txt"
-    file_name = "same_pro_rand.txt"
-    file_name = "save_epoch16.17_2.4484.t7.sample"
+    file_name = "../data/same_user_rand.txt"
+    # file_name = "../data/same_pro_rand.txt"
+    # file_name = "../data/all_rand.txt"
     with open(file_name, 'r') as f_in:
         r = 0
         test = []
